@@ -21,14 +21,24 @@ jobs:
       - id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push to ECR
+      - name: Build Docker Image
         run: |
           docker build -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }} -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:latest .
+
+      - name: Run Pytest inside Container
+        run: |
+          docker run --rm \
+            -e AWS_REGION="us-east-1" \
+            -e DYNAMODB_TABLE="compie_reviews" \
+            ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }} pytest -v
+
+      - name: Push to ECR
+        run: |
           docker push ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }}
           docker push ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:latest
 
       - name: Deploy (Trigger ASG Instance Refresh)
         run: |
           aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name "production-asg-20260730212044384600000001" \
+            --auto-scaling-group-name "production-asg-20260730181127912900000008" \
             --preferences '{"MinHealthyPercentage": 50}'
