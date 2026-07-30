@@ -17,11 +17,18 @@ jobs:
           role-to-assume: arn:aws:iam::367425865577:role/GitHubActionsECRPushRole
           aws-region: us-east-1
           retry-max-attempts: 1  # Stop loop and print actual error immediately
-          
+
       - id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push
+      - name: Build and push to ECR
         run: |
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }} .
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }} -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:latest .
           docker push ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:latest
+
+      - name: Deploy (Trigger ASG Instance Refresh)
+        run: |
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "production-asg-20260730181127912900000008" \
+            --preferences '{"MinHealthyPercentage": 50}'
