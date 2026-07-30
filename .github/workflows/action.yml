@@ -1,0 +1,27 @@
+name: Compie CI/CD
+
+on: [push]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::367425865577:role/GitHubActionsECRPushRole
+          aws-region: us-east-1
+          retry-max-attempts: 1  # Stop loop and print actual error immediately
+          
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }}
