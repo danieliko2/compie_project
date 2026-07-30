@@ -1,3 +1,7 @@
 Terraform/.terraform/
 **/.terraform.lock.hcl.bak
 *.tfstate
+
+# Windows Zone.Identifier metadata streams
+*:Zone.Identifier
+*Zone.Identifier*
