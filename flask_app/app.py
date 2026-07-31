@@ -131,6 +131,12 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
+        # --- DIAGNOSTIC LOGS ADDED FOR TESTING ---
+        logger.info(f"DEBUG LOGIN -> Submitted User: '{username}' (Match: {username == ADMIN_USERNAME})")
+        logger.info(f"DEBUG LOGIN -> Submitted Pass length: {len(password) if password else 0} | Expected Pass length: {len(ADMIN_PASSWORD)}")
+        logger.info(f"DEBUG LOGIN -> Direct Password Match: {password == ADMIN_PASSWORD}")
+        # -----------------------------------------
+
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session["logged_in"] = True
             logger.info(f"Admin user successfully logged in from {request.remote_addr}")
