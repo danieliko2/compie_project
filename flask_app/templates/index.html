@@ -121,24 +121,24 @@
 
         <h2>All Reviews</h2>
         <div style="margin-top: 16px;">
-            {% if reviews %}
-                {% for r in reviews %}
-                    <div class="review-card">
-                        <div class="review-header">
-                            <span class="reviewer">{{ r.reviewer_name }}</span>
-                            {% if is_logged_in %}
-                                <form action="/review/delete/{{ r.review_id }}" method="POST" style="margin:0;">
-                                    <button type="submit" class="btn-delete" onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            {% endif %}
-                        </div>
-                        <p class="content">{{ r.content }}</p>
-                        <div class="meta">Posted: {{ r.created_at }}</div>
+        {% if reviews %}
+            {% for r in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <span class="reviewer">{{ r.reviewer_name }}</span>
+                        {% if is_logged_in %}
+                            <form action="/review/delete/{{ r.review_id }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-delete" onclick="return confirm('Are you sure?')">Delete</button>
+                            </form>
+                        {% endif %}
                     </div>
-                {% endfor %}
-            {% else %}
-                <p style="color: #a0aec0; text-align: center; padding: 20px 0;">No reviews yet. Be the first to leave one!</p>
-            {% endif %}
+                    <p class="content">{{ r.content }}</p>
+                    <div class="meta">Posted: {{ r.created_at }}</div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #a0aec0; text-align: center; padding: 20px 0;">No reviews yet. Be the first to leave one!</p>
+        {% endif %}
         </div>
     </div>
 </body>
