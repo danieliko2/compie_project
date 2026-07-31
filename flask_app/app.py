@@ -27,12 +27,6 @@ logger = logging.getLogger("compie_app")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 SSM_PREFIX = os.environ.get("SSM_PREFIX", "/production/compie_app")
 
-# ------------------------------------------------------------------------------
-# AWS SSM & Credentials Configuration
-# ------------------------------------------------------------------------------
-AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
-SSM_PREFIX = os.environ.get("SSM_PREFIX", "/production/compie_app")
-
 def get_ssm_parameter(param_name, decrypt=False, default=None):
     """Fetch configuration or secrets directly from AWS SSM Parameter Store at runtime."""
     try:
@@ -51,6 +45,7 @@ try:
     TABLE_NAME = get_ssm_parameter("DYNAMODB_TABLE")
     ADMIN_USERNAME = get_ssm_parameter("APP_USERNAME")
     ADMIN_PASSWORD = get_ssm_parameter("APP_PASSWORD", decrypt=True)
+    logger.info("Successfully loaded configuration from AWS SSM.")
 except Exception:
     # Fallback values used only during local pytest execution where AWS credentials aren't present
     TABLE_NAME = "compie_reviews"
@@ -66,22 +61,6 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize DynamoDB resource: {str(e)}", exc_info=True)
     table = None
-# The running service consumes its configuration natively from AWS SSM
-try:
-    TABLE_NAME = get_ssm_parameter("DYNAMODB_TABLE")
-    ADMIN_USERNAME = get_ssm_parameter("APP_USERNAME")
-    ADMIN_PASSWORD = get_ssm_parameter("APP_PASSWORD", decrypt=True)
-except Exception as e:
-    logger.critical("Critical error fetching runtime parameters from SSM. Exiting.", exc_info=True)
-    sys.exit(1)
-
-logger.info(f"Initializing app with AWS Region: {AWS_REGION}, DynamoDB Table: {TABLE_NAME}")
-
-try:
-    dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
-    table = dynamodb.Table(TABLE_NAME)
-except Exception as e:
-    logger.error(f"Failed to initialize DynamoDB resource: {str(e)}", exc_info=True)
 
 # ------------------------------------------------------------------------------
 # Middleware / Request Logging
