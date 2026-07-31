@@ -4,9 +4,10 @@ import uuid
 import datetime
 import logging
 import boto3
-from flask import Flask, request, redirect, url_for, render_template, jsonify
+from flask import Flask, request, redirect, url_for, render_template, jsonify, session
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24) # Required for session management
 
 # ------------------------------------------------------------------------------
 # Logging Configuration
@@ -21,10 +22,13 @@ logging.basicConfig(
 logger = logging.getLogger("compie_app")
 
 # ------------------------------------------------------------------------------
-# AWS & DynamoDB Configuration
+# AWS & Credentials Configuration
 # ------------------------------------------------------------------------------
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 TABLE_NAME = os.environ.get("DYNAMODB_TABLE", "compie_reviews")
+
+ADMIN_USERNAME = os.environ.get("APP_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("APP_PASSWORD", "changeme")
 
 logger.info(f"Initializing app with AWS Region: {AWS_REGION}, DynamoDB Table: {TABLE_NAME}")
 
@@ -57,7 +61,8 @@ def index():
         logger.error(f"Error reading from DynamoDB table '{TABLE_NAME}': {str(e)}", exc_info=True)
         reviews = []
 
-    return render_template("index.html", reviews=reviews)
+    is_logged_in = session.get("logged_in", False)
+    return render_template("index.html", reviews=reviews, is_logged_in=is_logged_in)
 
 @app.route("/review", methods=["POST"])
 def add_review():
@@ -80,6 +85,42 @@ def add_review():
     else:
         logger.warning(f"Submission rejected: Missing required fields (reviewer_name or content) from {request.remote_addr}")
 
+    return redirect(url_for("index"))
+
+@app.route("/review/delete/<review_id>", methods=["POST"])
+def delete_review(review_id):
+    if not session.get("logged_in"):
+        logger.warning(f"Unauthorized delete attempt for review ID {review_id} from {request.remote_addr}")
+        return redirect(url_for("login"))
+
+    try:
+        table.delete_item(Key={"review_id": review_id})
+        logger.info(f"Successfully deleted review ID {review_id}")
+    except Exception as e:
+        logger.error(f"Failed deleting review ID {review_id} from DynamoDB: {str(e)}", exc_info=True)
+
+    return redirect(url_for("index"))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["logged_in"] = True
+            logger.info(f"Admin user successfully logged in from {request.remote_addr}")
+            return redirect(url_for("index"))
+        
+        logger.warning(f"Failed login attempt for username '{username}' from {request.remote_addr}")
+        return render_template("login.html", error="Invalid credentials")
+
+    return render_template("login.html")
+
+@app.route("/logout", methods=["GET"])
+def logout():
+    session.clear()
+    logger.info("Admin user logged out.")
     return redirect(url_for("index"))
 
 @app.route("/health", methods=["GET"])

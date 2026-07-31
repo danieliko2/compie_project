@@ -82,6 +82,17 @@
         {% else %}
             <p style="color: #718096;">No reviews yet. Be the first to leave one!</p>
         {% endif %}
+
+        {% if is_logged_in %}
+            <a href="/logout">Logout</a>
+            <!-- Inside your review loop -->
+            <form action="/review/delete/{{ review.review_id }}" method="POST" style="display:inline;">
+                <button type="submit">Delete</button>
+            </form>
+        {% else %}
+            <a href="/login">Admin Login</a>
+        {% endif %}
     </div>
+
 </body>
 </html>
