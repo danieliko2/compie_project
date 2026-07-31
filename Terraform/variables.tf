@@ -33,3 +33,16 @@ variable "health_check_path" {
   description = "Health check path for ALB Target Group"
   default     = "/"
 }
+
+variable "app_username" {
+  type        = string
+  description = "Default admin username for the application"
+  default     = "admin"
+}
+
+variable "app_password" {
+  type        = string
+  description = "Default admin password for the application"
+  default     = "InitialSecurePassword123!"
+  sensitive   = true
+}

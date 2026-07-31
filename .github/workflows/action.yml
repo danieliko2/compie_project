@@ -14,7 +14,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::367425865577:role/GitHubActionsECRPushRole
+          role-to-assume: arn:aws:iam::367425865577:role/GitHubActionsRole
           aws-region: us-east-1
           retry-max-attempts: 1  # Stop loop and print actual error immediately
 
@@ -48,7 +48,13 @@ jobs:
           docker push ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:latest
 
       - name: Deploy (Trigger ASG Instance Refresh)
-        run: |
-          aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name "production-asg-2026073109405306610000000a" \
-            --preferences '{"MinHealthyPercentage": 50}'
+              run: |
+                ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
+                  --query "AutoScalingGroups[?starts_with(AutoScalingGroupName, 'production-asg-')].AutoScalingGroupName | [0]" \
+                  --output text)
+                
+                echo "Found ASG: $ASG_NAME"
+                
+                aws autoscaling start-instance-refresh \
+                  --auto-scaling-group-name "$ASG_NAME" \
+                  --preferences '{"MinHealthyPercentage": 50}'

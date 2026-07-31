@@ -40,7 +40,8 @@ resource "aws_iam_policy" "dynamodb_access" {
           "dynamodb:GetItem",
           "dynamodb:Scan",
           "dynamodb:Query",
-          "dynamodb:DescribeTable"
+          "dynamodb:DescribeTable",
+          "dynamodb:DeleteItem"
         ]
         Resource = aws_dynamodb_table.reviews.arn
       }
@@ -51,7 +52,7 @@ resource "aws_iam_policy" "dynamodb_access" {
 # 4. SSM Parameter Store & KMS Decrypt Read Policy
 resource "aws_iam_policy" "ssm_read_policy" {
   name        = "${var.environment}-EC2SSMReadAccess"
-  description = "Allows reading parameters from SSM Parameter Store"
+  description = "Allows reading parameters from SSM Parameter Store and decrypting via custom KMS key"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -66,9 +67,13 @@ resource "aws_iam_policy" "ssm_read_policy" {
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/compie_app/*"
       },
       {
-        Effect   = "Allow"
-        Action   = ["kms:Decrypt"]
-        Resource = "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        # Updated to reference your custom KMS key resource instead of the AWS managed alias
+        Resource = aws_kms_key.app_key.arn
       }
     ]
   })

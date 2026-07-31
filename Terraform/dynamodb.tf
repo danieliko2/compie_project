@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "reviews" {
-  name         = "compie_reviews"
+  name         = "production-reviews"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "review_id"
 
@@ -8,9 +8,9 @@ resource "aws_dynamodb_table" "reviews" {
     type = "S"
   }
 
-  # Cleaned up KMS server-side encryption
   server_side_encryption {
-    enabled = true
+    enabled     = true
+    kms_key_arn = aws_kms_key.app_key.arn
   }
 
   tags = {
