@@ -48,13 +48,13 @@ jobs:
           docker push ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:latest
 
       - name: Deploy (Trigger ASG Instance Refresh)
-              run: |
-                ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
-                  --query "AutoScalingGroups[?starts_with(AutoScalingGroupName, 'production-asg-')].AutoScalingGroupName | [0]" \
-                  --output text)
-                
-                echo "Found ASG: $ASG_NAME"
-                
-                aws autoscaling start-instance-refresh \
-                  --auto-scaling-group-name "$ASG_NAME" \
-                  --preferences '{"MinHealthyPercentage": 50}'
+        run: |
+          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
+            --query "AutoScalingGroups[?starts_with(AutoScalingGroupName, 'production-asg-')].AutoScalingGroupName | [0]" \
+            --output text)
+          
+          echo "Found ASG: $ASG_NAME"
+          
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "$ASG_NAME" \
+            --preferences '{"MinHealthyPercentage": 50}'
