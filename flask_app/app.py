@@ -22,13 +22,29 @@ logging.basicConfig(
 logger = logging.getLogger("compie_app")
 
 # ------------------------------------------------------------------------------
-# AWS & Credentials Configuration
+# AWS SSM & Credentials Configuration
 # ------------------------------------------------------------------------------
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
-TABLE_NAME = os.environ.get("DYNAMODB_TABLE", "compie_reviews")
+SSM_PREFIX = os.environ.get("SSM_PREFIX", "/production/compie_app")
 
-ADMIN_USERNAME = os.environ.get("APP_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("APP_PASSWORD", "changeme")
+def get_ssm_parameter(param_name, decrypt=False):
+    """Fetch configuration or secrets directly from AWS SSM Parameter Store at runtime."""
+    try:
+        ssm = boto3.client("ssm", region_name=AWS_REGION)
+        response = ssm.get_parameter(Name=f"{SSM_PREFIX}/{param_name}", WithDecryption=decrypt)
+        return response["Parameter"]["Value"]
+    except Exception as e:
+        logger.error(f"Failed to fetch SSM parameter {param_name}: {str(e)}", exc_info=True)
+        raise e
+
+# The running service consumes its configuration natively from AWS SSM
+try:
+    TABLE_NAME = get_ssm_parameter("DYNAMODB_TABLE")
+    ADMIN_USERNAME = get_ssm_parameter("APP_USERNAME")
+    ADMIN_PASSWORD = get_ssm_parameter("APP_PASSWORD", decrypt=True)
+except Exception as e:
+    logger.critical("Critical error fetching runtime parameters from SSM. Exiting.", exc_info=True)
+    sys.exit(1)
 
 logger.info(f"Initializing app with AWS Region: {AWS_REGION}, DynamoDB Table: {TABLE_NAME}")
 

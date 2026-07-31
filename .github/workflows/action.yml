@@ -25,17 +25,21 @@ jobs:
         run: |
           docker build -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }} -t ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:latest .
 
-      - name: Run Pytest inside Container
+      - name: Fetch SSM Parameters and Run Pytest
         run: |
-          # 1. Fetch exact parameters using your environment prefix
+          # 1. Fetch parameters (with decryption for SecureString password)
           AWS_REGION=$(aws ssm get-parameter --name "/production/compie_app/AWS_REGION" --query "Parameter.Value" --output text)
           DYNAMODB_TABLE=$(aws ssm get-parameter --name "/production/compie_app/DYNAMODB_TABLE" --query "Parameter.Value" --output text)
+          APP_USERNAME=$(aws ssm get-parameter --name "/production/compie_app/APP_USERNAME" --query "Parameter.Value" --output text)
+          APP_PASSWORD=$(aws ssm get-parameter --name "/production/compie_app/APP_PASSWORD" --with-decryption --query "Parameter.Value" --output text)
 
           # 2. Pass fetched parameters into the container run step
           # ('python -m pytest' automatically adds /app to sys.path)
           docker run --rm \
             -e AWS_REGION="$AWS_REGION" \
             -e DYNAMODB_TABLE="$DYNAMODB_TABLE" \
+            -e APP_USERNAME="$APP_USERNAME" \
+            -e APP_PASSWORD="$APP_PASSWORD" \
             ${{ steps.login-ecr.outputs.registry }}/daniel_dev/compie_app:${{ github.sha }} python -m pytest -v
 
       - name: Push to ECR
