@@ -1,14 +1,96 @@
 <!DOCTYPE html>
-<html>
-<head><title>Login</title></head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Compie Reviews</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            max-width: 400px; 
+            margin: 80px auto; 
+            padding: 0 20px; 
+            color: #2d3748;
+            background-color: #f7fafc;
+        }
+        .container {
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        h2 { color: #1a202c; margin-top: 0; margin-bottom: 24px; text-align: center; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; color: #4a5568; }
+        input[type="text"], input[type="password"] { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #fafafa;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #3182ce;
+            background-color: #ffffff;
+        }
+        button { 
+            width: 100%;
+            background-color: #3182ce; 
+            color: white; 
+            padding: 12px; 
+            border: none; 
+            font-weight: 600;
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        button:hover { background-color: #2b6cb0; }
+        .error-banner {
+            background-color: #fed7d7;
+            border: 1px solid #f5c6cb;
+            color: #9b2c2c;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #718096;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { color: #2d3748; text-decoration: underline; }
+    </style>
+</head>
 <body>
-    <h2>Admin Login</h2>
-    {% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required><br><br>
-        <input type="password" name="password" placeholder="Password" required><br><br>
-        <button type="submit">Log In</button>
-    </form>
-    <p><a href="/">Back to Home</a></p>
+    <div class="container">
+        <h2>Admin Login</h2>
+        
+        {% if error %}
+            <div class="error-banner">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter admin username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter admin password" required>
+            </div>
+            <button type="submit">Log In</button>
+        </form>
+
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
 </body>
 </html>
