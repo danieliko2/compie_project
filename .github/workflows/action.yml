@@ -50,5 +50,5 @@ jobs:
       - name: Deploy (Trigger ASG Instance Refresh)
         run: |
           aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name "production-asg-20260730181127912900000008" \
+            --auto-scaling-group-name "production-asg-2026073109405306610000000a" \
             --preferences '{"MinHealthyPercentage": 50}'
