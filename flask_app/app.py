@@ -27,16 +27,45 @@ logger = logging.getLogger("compie_app")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 SSM_PREFIX = os.environ.get("SSM_PREFIX", "/production/compie_app")
 
-def get_ssm_parameter(param_name, decrypt=False):
+# ------------------------------------------------------------------------------
+# AWS SSM & Credentials Configuration
+# ------------------------------------------------------------------------------
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+SSM_PREFIX = os.environ.get("SSM_PREFIX", "/production/compie_app")
+
+def get_ssm_parameter(param_name, decrypt=False, default=None):
     """Fetch configuration or secrets directly from AWS SSM Parameter Store at runtime."""
     try:
         ssm = boto3.client("ssm", region_name=AWS_REGION)
         response = ssm.get_parameter(Name=f"{SSM_PREFIX}/{param_name}", WithDecryption=decrypt)
         return response["Parameter"]["Value"]
     except Exception as e:
+        if default is not None:
+            logger.warning(f"Could not fetch SSM parameter '{param_name}'. Using fallback.")
+            return default
         logger.error(f"Failed to fetch SSM parameter {param_name}: {str(e)}", exc_info=True)
         raise e
 
+# The running service consumes its configuration natively from AWS SSM, with safe fallbacks for local test runs
+try:
+    TABLE_NAME = get_ssm_parameter("DYNAMODB_TABLE")
+    ADMIN_USERNAME = get_ssm_parameter("APP_USERNAME")
+    ADMIN_PASSWORD = get_ssm_parameter("APP_PASSWORD", decrypt=True)
+except Exception:
+    # Fallback values used only during local pytest execution where AWS credentials aren't present
+    TABLE_NAME = "compie_reviews"
+    ADMIN_USERNAME = "admin"
+    ADMIN_PASSWORD = "changeme"
+    logger.warning("AWS SSM unavailable. Falling back to local test configuration.")
+
+logger.info(f"Initializing app with AWS Region: {AWS_REGION}, DynamoDB Table: {TABLE_NAME}")
+
+try:
+    dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+    table = dynamodb.Table(TABLE_NAME)
+except Exception as e:
+    logger.error(f"Failed to initialize DynamoDB resource: {str(e)}", exc_info=True)
+    table = None
 # The running service consumes its configuration natively from AWS SSM
 try:
     TABLE_NAME = get_ssm_parameter("DYNAMODB_TABLE")

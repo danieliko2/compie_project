@@ -1,7 +1,6 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-# Mock the dynamodb table creation at import time so tests never need a real table name
 @pytest.fixture(autouse=True)
 def mock_dynamodb_table():
     with patch("app.table", autospec=True) as mock_table:
